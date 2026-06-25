@@ -15,7 +15,7 @@ class RegistroMeta(type):
        def obtener_clases_registradas(mcs):
            return list(mcs._registro_clases.keys())
 
-2.DECORADOR
+
 def log_operacion(func):
 """Decorador para registrar el inicio y fin de operaciones CRUD."""
 @functools.wraps(func)
@@ -27,7 +27,7 @@ def wrapper(*args, **kwargs):
     print(f"[LOG - {timestamp_fin}] operacion ´{func.__name_}´ finalizada con exito.")
 return wrapper
 
-3.Herencia y composicion.
+
 class EntidadBase(metaclass=RegistroMeta):
     """clase base abstracta (conceptual) para la gestion de IDs unicos."""
     _contador_id = 1
@@ -97,7 +97,7 @@ class Usuario(EntidadBase):
     def mostrar_info(self) - str:
         return f"[usuario ID {self.id}] {self.apellido}, {self.nombre} (DNI: { self.dni}) - Email: {self.email}"
 
-4.Relacion de agregacion
+
 class prestamo(EntidadBase):
     """Clase prestamo. Aplica agregacion (recibe instancias de usuario y Elementocatalogo)."""
     def __init__(self, usuario: usuario, elemento: elementocatalogo):
@@ -124,7 +124,7 @@ class prestamo(EntidadBase):
         f_dev = self.fecha_devolucion.strftime("%Y-%m-%d %H:%M") if self.fecha_devolucion else "Pendiente"
         return f"[prestamo ID {self.id}] ´{self.elemento.titulo}´ prestado a {self.usuario.nombre} {self.usuario.apellido}. fecha: {f_prestamo} / devolucion: {f_dev}"
 
- 5. patron de diseño singleton
+
 class Biblioteca:
     """clase controladora del sistema bajo el patron singleton."""
      _instancia=none
@@ -195,6 +195,48 @@ class Biblioteca:
             print("Error: usuario no encontrado.")
 
     def listar_usuarios(self):
+        print("/n---listado de usuarios ---")
+        if not self.usuarios:
+            print("no hay usuarios registrados.")
+        for user in self.usuarios.values():
+            print(user.mostrar_info())
+
+    @log_operacion
+    def registrar_prestamo(self, id_usuario: int, id_elemento: int):
+        usuario = self.usuarios.get(id_usuario)
+        elemento = self.catalogo.get(id_elemento)
+
+        if not usuario or not elemento:
+            print("Error: usuario o elemento no encontrado.")
+            return
+
+        if elemento.prestado:
+            print(f"Error: el elemento ´{elemento.titulo}´ ya posee un prestamo activo.")
+            return
+
+        nuevo_prestamo = prestamo(usuario, elemento)
+        self.prestamos[nuevo_prestamo.id] = nuevo_prestamo
+        print(f"prestamo registrado: ´{elemento.titulo}´ - {usuario.nombre}.")
+
+    @log_operacion
+    def registrar_devolucion(self, id_prestamo: int):
+        prestamo = self.prestamos.get(id_prestamo)
+        if prestamo and prestamo.activo:
+            prestamo.finalizar_devolucion()
+            print(f"devolucion procesada para el prestamo ID {id_prestamo}.")
+        else:
+            print("Error: prestamo no encontrado o ya devuelto.")
+
+    def consultar_prestamos_activos(self):
+        print("/n--- prestamos activos ---")
+        activos = [p for p in self.prestamos.values() if p.activo]
+        if not activos:
+            print("no hay prestamos activos en este momento.")
+        for p in activos:
+            print(p.mostrar_info())
+
+    
+    
     
     
 
